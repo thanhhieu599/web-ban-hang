@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class OrderReturn extends Model
+{
+    protected $guarded = [];
+
+    public const STATUSES = ['requested' => 'Chờ xử lý', 'approved' => 'Đã chấp nhận', 'rejected' => 'Từ chối', 'refunded' => 'Đã hoàn tiền'];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
