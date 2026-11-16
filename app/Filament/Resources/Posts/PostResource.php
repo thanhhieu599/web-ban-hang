@@ -80,7 +80,7 @@ class PostResource extends Resource
                 Select::make('tags')->label('Thẻ (tags)')->relationship('tags', 'name')->multiple()->preload()
                     ->createOptionForm([TextInput::make('name')->label('Tên')->required(), TextInput::make('slug')->required()]),
                 Toggle::make('is_featured')->label('Bài nổi bật'),
-                FileUpload::make('image')->label('Ảnh đại diện')->image()->disk('public')->directory('posts'),
+                FileUpload::make('image')->label('Ảnh đại diện')->image()->imageEditor()->disk('public')->directory('posts')->maxSize(3072)->helperText('Ảnh ngang 1200×675 px (16:9).'),
                 Select::make('theme')->label('Màu nền khi chưa có ảnh')->options(Models\Ad::THEMES)->default('red'),
                 Select::make('art')->label('Hình minh họa')->options(art_options())->searchable(),
                 TextInput::make('meta_title')->label('Tiêu đề SEO')->maxLength(70),

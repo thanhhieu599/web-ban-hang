@@ -29,6 +29,14 @@
             <div class="sm:col-span-2"><label for="address" class="label">Địa chỉ</label><input id="address" name="address" value="{{ old('address', $user->address) }}" class="field"></div>
             <div class="sm:col-span-2"><button class="btn btn-primary">Lưu thay đổi</button></div>
         </form>
+        <form action="{{ route('account.password') }}" method="post" class="card grid gap-4 sm:grid-cols-3">
+            @csrf
+            <h2 class="text-[16px] font-extrabold sm:col-span-3">Đổi mật khẩu</h2>
+            <div><label for="current_password" class="label">Mật khẩu hiện tại</label><input id="current_password" name="current_password" type="password" class="field" autocomplete="current-password" required>''' + ERR('current_password') + r'''</div>
+            <div><label for="new_password" class="label">Mật khẩu mới</label><input id="new_password" name="password" type="password" class="field" autocomplete="new-password" required>''' + ERR('password') + r'''</div>
+            <div><label for="new_password_confirmation" class="label">Nhập lại mật khẩu mới</label><input id="new_password_confirmation" name="password_confirmation" type="password" class="field" autocomplete="new-password" required></div>
+            <div class="sm:col-span-3"><button class="btn btn-ghost">Đổi mật khẩu</button></div>
+        </form>
     </div>
 </div>
 @endsection

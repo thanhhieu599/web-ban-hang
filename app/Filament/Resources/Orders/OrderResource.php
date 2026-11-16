@@ -80,7 +80,10 @@ class OrderResource extends Resource
                 TextInput::make('discount_total')->label('Giảm giá')->numeric()->default(0)->suffix('đ'),
                 Textarea::make('admin_note')->label('Ghi chú nội bộ')->rows(2)->columnSpanFull(),
             ]),
-            Section::make('Sản phẩm trong đơn')->description('Tổng tiền được tính lại tự động khi lưu.')->columnSpanFull()->schema([
+            Section::make('Sản phẩm trong đơn')
+                ->description(fn (string $operation) => $operation === 'create'
+                    ? 'Tồn kho được trừ và tổng tiền được tính tự động khi lưu.'
+                    : 'Không sửa được sản phẩm của đơn đã tạo để tránh lệch tồn kho. Cần đổi sản phẩm: hủy đơn này và tạo đơn mới.')->columnSpanFull()->schema([
                 Repeater::make('items')->hiddenLabel()->relationship()->columns(12)->schema([
                     Select::make('product_id')->label('Sản phẩm')->options(fn () => Models\Product::orderBy('name')->pluck('name', 'id'))->searchable()->required()->live()
                         ->afterStateUpdated(function (Set $set, $state) {
@@ -96,7 +99,7 @@ class OrderResource extends Resource
                     TextInput::make('quantity')->label('SL')->numeric()->default(1)->minValue(1)->required()->columnSpan(2),
                     Hidden::make('sku'),
                     Hidden::make('cost')->default(0),
-                ])->addActionLabel('Thêm sản phẩm')->defaultItems(1),
+                ])->addActionLabel('Thêm sản phẩm')->defaultItems(1)->disabledOn('edit')->deletable(fn (string $operation) => $operation === 'create')->addable(fn (string $operation) => $operation === 'create'),
             ]),
         ]);
     }
@@ -120,6 +123,7 @@ class OrderResource extends Resource
             ->filters([
                 SelectFilter::make('status')->label('Trạng thái')->options(Models\Order::STATUSES),
                 SelectFilter::make('payment_status')->label('Thanh toán')->options(Models\Order::PAYMENT_STATUSES),
+                SelectFilter::make('user_id')->label('Khách hàng (có tài khoản)')->relationship('user', 'name')->searchable(),
                 Filter::make('created_at')->schema([DatePicker::make('from')->label('Từ ngày'), DatePicker::make('until')->label('Đến ngày')])
                     ->query(fn (Builder $q, array $data) => $q
                         ->when($data['from'] ?? null, fn ($q, $d) => $q->whereDate('created_at', '>=', $d))

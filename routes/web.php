@@ -4,7 +4,9 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ContentController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PrintController;
 use App\Http\Middleware\TrackVisit;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +47,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/dang-nhap', [AccountController::class, 'login'])->middleware('throttle:8,1');
     Route::get('/dang-ky', [AccountController::class, 'showRegister'])->name('register');
     Route::post('/dang-ky', [AccountController::class, 'register'])->middleware('throttle:5,1');
+    Route::get('/quen-mat-khau', [PasswordController::class, 'request'])->name('password.request');
+    Route::post('/quen-mat-khau', [PasswordController::class, 'email'])->middleware('throttle:5,1')->name('password.email');
+    Route::get('/dat-lai-mat-khau/{token}', [PasswordController::class, 'reset'])->name('password.reset');
+    Route::post('/dat-lai-mat-khau', [PasswordController::class, 'update'])->middleware('throttle:5,1')->name('password.update');
 });
 
 // Khách hàng đã đăng nhập
@@ -52,6 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dang-xuat', [AccountController::class, 'logout'])->name('logout');
     Route::get('/tai-khoan', [AccountController::class, 'index'])->name('account');
     Route::post('/tai-khoan', [AccountController::class, 'updateProfile'])->name('account.update');
+    Route::post('/tai-khoan/mat-khau', [PasswordController::class, 'change'])->middleware('throttle:5,1')->name('account.password');
     Route::get('/tai-khoan/yeu-thich', [AccountController::class, 'wishlist'])->name('account.wishlist');
     Route::get('/tai-khoan/don-hang/{code}', [AccountController::class, 'order'])->name('account.order');
     Route::post('/tai-khoan/don-hang/{code}/tra-hang', [AccountController::class, 'requestReturn'])->name('account.return');
@@ -63,4 +70,5 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'can:staff'])->prefix('admin/in')->group(function () {
     Route::get('/don-hang/{order}', [PrintController::class, 'order'])->name('admin.orders.print');
     Route::get('/hoa-don/{invoice}', [PrintController::class, 'invoice'])->name('admin.invoices.print');
+    Route::get('/xuat/{type}', ExportController::class)->name('admin.export');
 });

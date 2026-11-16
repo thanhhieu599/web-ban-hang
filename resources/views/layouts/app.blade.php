@@ -19,7 +19,7 @@
     <meta property="og:url" content="{{ url()->current() }}">
     @hasSection('og_image')<meta property="og:image" content="@yield('og_image')">@endif
     <meta name="theme-color" content="#e0121f">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ $site['favicon'] ? asset('storage/'.$site['favicon']) : asset('favicon.svg') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
@@ -54,6 +54,9 @@
                 <button class="grid h-10 w-10 place-items-center rounded-lg text-ink-800 lg:hidden" @click="drawer = true" aria-label="Mở danh mục"><x-ico name="menu" size="22" /></button>
 
                 <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2" aria-label="{{ $siteName }} - Trang chủ">
+                    @if ($site['logo'])
+                    <img src="{{ asset('storage/'.$site['logo']) }}" alt="{{ $siteName }}" class="h-9 w-auto max-w-[170px] object-contain lg:h-10">
+                    @else
                     <span class="grid h-9 w-9 place-items-center rounded-[10px] bg-brand-600 text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.18)]">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2 4 13.5h6.2L9 22l10-12.2h-6.4z"/></svg>
                     </span>
@@ -61,6 +64,7 @@
                         <span class="block text-[22px] font-black tracking-tight text-ink-900">{{ $site['site_name'] }}</span>
                         <span class="block text-[10px] font-semibold uppercase tracking-[.18em] text-brand-600">{{ $site['site_tagline'] }}</span>
                     </span>
+                    @endif
                 </a>
 
                 <button class="hidden h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-[14px] font-semibold transition lg:flex"
@@ -119,7 +123,7 @@
                             <a href="{{ route('category', $group->slug) }}" @mouseenter="megaI = {{ $i }}" @focus="megaI = {{ $i }}"
                                 class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] transition"
                                 :class="megaI === {{ $i }} ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-700 hover:bg-ink-50'">
-                                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-ink-50"><x-art :type="$group->icon ?: 'plug'" /></span>
+                                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-ink-50"><x-cat-icon :category="$group" /></span>
                                 <span class="flex-1">{{ $group->name }}</span>
                                 @if ($group->sale_badge)<span class="tag-sale rounded px-1.5 py-0.5 text-[10px] font-bold">{{ $group->sale_badge }}</span>@endif
                                 <x-ico name="right" size="14" class="text-ink-300" />
@@ -141,7 +145,7 @@
                             <div class="grid grid-cols-4 gap-3">
                                 @foreach ($group->children as $child)
                                     <a href="{{ route('category', $child->slug) }}" class="group flex flex-col items-center gap-2 rounded-xl p-3 text-center ring-1 ring-ink-100 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-300">
-                                        <span class="grid h-16 w-16 place-items-center rounded-full bg-linear-to-b from-ink-50 to-white"><x-art :type="$child->icon ?: 'plug'" /></span>
+                                        <span class="grid h-16 w-16 place-items-center rounded-full bg-linear-to-b from-ink-50 to-white"><x-cat-icon :category="$child" /></span>
                                         <span class="text-[13px] font-medium text-ink-800 group-hover:text-brand-700">{{ $child->name }}</span>
                                     </a>
                                 @endforeach
@@ -187,7 +191,7 @@
                 @foreach ($menu as $i => $group)
                     <div class="border-b border-ink-100">
                         <button class="flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] font-semibold" @click="drawerI = drawerI === {{ $i }} ? -1 : {{ $i }}" :aria-expanded="drawerI === {{ $i }}">
-                            <span class="grid h-9 w-9 place-items-center rounded-lg bg-ink-50"><x-art :type="$group->icon ?: 'plug'" /></span>
+                            <span class="grid h-9 w-9 place-items-center rounded-lg bg-ink-50"><x-cat-icon :category="$group" /></span>
                             <span class="flex-1">{{ $group->name }}</span>
                             <x-ico name="down" size="16" class="transition" ::class="drawerI === {{ $i }} && 'rotate-180'" />
                         </button>
@@ -195,7 +199,7 @@
                             <div class="grid grid-cols-3 gap-2 bg-ink-50 p-3">
                                 @foreach ($group->children as $child)
                                     <a href="{{ route('category', $child->slug) }}" class="flex flex-col items-center gap-1.5 rounded-lg bg-white p-2 text-center">
-                                        <span class="h-12 w-12"><x-art :type="$child->icon ?: 'plug'" /></span>
+                                        <span class="h-12 w-12"><x-cat-icon :category="$child" /></span>
                                         <span class="text-[12px] leading-tight text-ink-700">{{ $child->name }}</span>
                                     </a>
                                 @endforeach
@@ -230,7 +234,8 @@
         </div>
         <div class="wrap grid gap-8 py-8 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
             <div>
-                <p class="text-[20px] font-black">{{ $site['site_name'] }} <span class="text-[12px] font-semibold uppercase tracking-[.16em] text-brand-600">{{ $site['site_tagline'] }}</span></p>
+                @if ($site['logo'])<img src="{{ asset('storage/'.$site['logo']) }}" alt="{{ $siteName }}" class="h-10 w-auto max-w-[180px] object-contain">@else
+                <p class="text-[20px] font-black">{{ $site['site_name'] }} <span class="text-[12px] font-semibold uppercase tracking-[.16em] text-brand-600">{{ $site['site_tagline'] }}</span></p>@endif
                 <div class="mt-4 space-y-3 text-[13px]">
                     <p><span class="num block text-[20px] font-black">{{ $site['hotline_sales'] }}</span><span class="text-ink-500">Tư vấn mua hàng (8:00 – 22:00)</span></p>
                     <p><span class="num block text-[20px] font-black">{{ $site['hotline_care'] }}</span><span class="text-ink-500">Chăm sóc khách hàng (8:00 – 21:00)</span></p>

@@ -18,7 +18,7 @@ class ListOrders extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()];
+        return [Action::make('export')->label('Xuất Excel (CSV)')->icon('heroicon-o-arrow-down-tray')->color('gray')->url(route('admin.export', 'don-hang'))->openUrlInNewTab(), CreateAction::make()];
     }
 
     public function getTabs(): array

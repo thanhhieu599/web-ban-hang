@@ -17,7 +17,7 @@ class Setting extends Model
     protected $keyType = 'string';
 
     public const DEFAULTS = [
-        'site_name' => 'NEXA', 'site_tagline' => 'điện máy',
+        'site_name' => 'NEXA', 'site_tagline' => 'điện máy', 'logo' => '', 'favicon' => '',
         'hotline_sales' => '1900 0000', 'hotline_care' => '1800 0000',
         'email' => 'cskh@example.com', 'address' => 'Cập nhật địa chỉ cửa hàng trong trang quản trị',
         'company_name' => 'Tên công ty của bạn', 'tax_code' => '',
@@ -31,7 +31,8 @@ class Setting extends Model
 
     public static function allCached(): array
     {
-        return cache()->remember('settings', 600, fn () => array_merge(self::DEFAULTS, self::pluck('value', 'key')->all()));
+        // Giá trị mặc định nằm ngoài cache để các mục cấu hình mới luôn có sẵn sau khi nâng cấp
+        return array_merge(self::DEFAULTS, cache()->remember('settings', 600, fn () => self::pluck('value', 'key')->all()));
     }
 
     public static function get(string $key, ?string $default = null): ?string

@@ -29,7 +29,9 @@
         ? array_filter([$category->parent ? [$category->parent->name, route('category', $category->parent->slug)] : null, [$category->name, null]])
         : [[$title, null]]])
 
-    @if ($banners->isNotEmpty() && $category)
+    @if ($category?->banner)
+        <img src="{{ asset('storage/'.$category->banner) }}" alt="{{ $category->name }}" class="aspect-[4/1] w-full rounded-2xl object-cover">
+    @elseif ($banners->isNotEmpty() && $category)
         <div class="relative overflow-hidden rounded-2xl" x-data="slider({{ $banners->count() }})" @mouseenter="pause = true" @mouseleave="pause = false">
             <div class="flex transition-transform duration-500" :style="`transform: translateX(-${i * 100}%)`">
                 @foreach ($banners as $ad)
@@ -47,7 +49,7 @@
         <div class="no-sb flex gap-2 overflow-x-auto">
             @foreach ($siblings as $sibling)
                 <a href="{{ route('category', $sibling->slug) }}" @class(['flex shrink-0 items-center gap-2 rounded-xl bg-white py-1.5 pl-1.5 pr-3 text-[13px] font-medium ring-1 transition', 'text-brand-700 ring-brand-600' => $sibling->id === $category->id, 'text-ink-700 ring-ink-100 hover:ring-ink-300' => $sibling->id !== $category->id])>
-                    <span class="h-8 w-8 rounded-lg bg-ink-50"><x-art :type="$sibling->icon ?: 'plug'" /></span>{{ $sibling->name }}
+                    <span class="h-8 w-8 rounded-lg bg-ink-50"><x-cat-icon :category="$sibling" /></span>{{ $sibling->name }}
                 </a>
             @endforeach
         </div>

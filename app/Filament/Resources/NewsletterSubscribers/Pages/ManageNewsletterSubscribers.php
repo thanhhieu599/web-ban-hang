@@ -18,6 +18,6 @@ class ManageNewsletterSubscribers extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()];
+        return [Action::make('export')->label('Xuất Excel (CSV)')->icon('heroicon-o-arrow-down-tray')->color('gray')->url(route('admin.export', 'email-nhan-tin'))->openUrlInNewTab(), CreateAction::make()];
     }
 }

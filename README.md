@@ -22,7 +22,10 @@ Website bán điện máy viết bằng **Laravel 13 · Blade · Tailwind CSS 4 
 | Tra cứu đơn | `/tra-cuu-don-hang` | Tra bằng mã đơn và số điện thoại |
 | Tin tức | `/tin-tuc` | Chuyên mục, bài viết, bài liên quan |
 | Trang tĩnh, Hỏi đáp, Liên hệ | `/trang/{slug}`, `/hoi-dap`, `/lien-he` | |
-| Tài khoản | `/tai-khoan` | Đơn hàng, hủy đơn, yêu cầu trả hàng, sản phẩm yêu thích, thông tin cá nhân |
+| Tài khoản | `/tai-khoan` | Đơn hàng, hủy đơn, yêu cầu trả hàng, sản phẩm yêu thích, thông tin cá nhân, đổi mật khẩu |
+| Quên mật khẩu | `/quen-mat-khau` | Gửi liên kết đặt lại qua email |
+| Email tự động | | Khách nhận email khi đặt hàng và mỗi lần đơn đổi trạng thái; cửa hàng nhận email khi có đơn mới |
+| Trang lỗi | | 404, 403, 419, 429, 500, 503 theo giao diện cửa hàng |
 | SEO | `/sitemap.xml`, `robots.txt` | Có thẻ title, description, canonical, Open Graph |
 
 ### Trang quản trị (`/admin`)
@@ -37,7 +40,33 @@ Website bán điện máy viết bằng **Laravel 13 · Blade · Tailwind CSS 4 
 - **Marketing:** Flash sale (đếm ngược, số suất), Mã giảm giá, Đánh giá (duyệt, phản hồi), Khách hàng (hạng thành viên, tổng chi tiêu), Quảng cáo (banner theo vị trí, đếm lượt bấm), Email nhận tin.
 - **Nội dung:** Bài viết, Chuyên mục, Thẻ, Trang nội dung, Phản hồi khách hàng, Câu hỏi thường gặp, Liên hệ.
 - **Tài chính:** Chi phí (dùng để tính lợi nhuận).
-- **Hệ thống** (chỉ Super Admin): Tài khoản quản trị, Cấu hình cửa hàng.
+- **Hệ thống** (chỉ Super Admin): Tài khoản quản trị, Cấu hình cửa hàng (tên, logo, favicon, hotline, phí giao hàng, thông tin chuyển khoản, mạng xã hội, SEO).
+- **Tiện ích chung:**
+  - Xuất Excel (CSV) cho đơn hàng, sản phẩm, khách hàng, email nhận tin.
+  - Thùng rác sản phẩm, khôi phục được sản phẩm đã xóa.
+  - Lịch sử nhập xuất kho, gồm cả tồn kho ban đầu.
+  - Trả lời liên hệ qua email.
+  - Từ trang Khách hàng mở nhanh danh sách đơn của khách đó.
+  - Tìm nhanh bằng phím tắt Ctrl+K.
+
+### Chỗ thay ảnh (tải ảnh lên trong trang quản trị)
+
+Mọi vị trí có ảnh hoặc icon đều thay được bằng ảnh thật. Chưa tải ảnh thì website tự dùng hình minh họa hoặc banner dựng bằng chữ, nên lúc nào trang cũng đầy đủ.
+
+| Vị trí ngoài cửa hàng | Tải ảnh ở đâu | Kích thước khuyên dùng |
+|---|---|---|
+| Logo đầu trang, chân trang, trang quản trị; favicon | Hệ thống → Cấu hình cửa hàng | Logo ngang cao ~80 px; favicon 64×64 |
+| Banner chính trang chủ (slider) | Marketing → Quảng cáo, vị trí *Trang chủ: banner chính* | 1200×450 (thêm ảnh điện thoại 800×600) |
+| 2 banner phụ bên phải | Quảng cáo, vị trí *banner phụ* | 600×340 |
+| Các ô "Deal nổ lớn" | Quảng cáo, vị trí *ô deal* | 600×600; ô lớn giữa 1200×1200 |
+| Banner đầu trang danh mục | Sản phẩm → Danh mục → *Ảnh banner* (riêng từng danh mục), hoặc Quảng cáo vị trí *Trang danh mục* (dùng chung) | 1200×300 |
+| Icon danh mục (menu 2 cấp, Danh mục nổi bật, thanh danh mục) | Sản phẩm → Danh mục → *Ảnh icon* | 200×200, nền trong suốt |
+| Logo thương hiệu ở bộ lọc | Sản phẩm → Thương hiệu | 240×80 |
+| Ảnh sản phẩm (nhiều ảnh, kéo để sắp xếp) | Sản phẩm → Sản phẩm → tab *Hình ảnh* | 800×800, nền trắng |
+| Ảnh bài viết | Nội dung → Bài viết | 1200×675 |
+| Ảnh khách hàng ở mục phản hồi | Nội dung → Phản hồi khách hàng | 200×200 |
+
+Ô tải ảnh có sẵn công cụ cắt, xoay ảnh và ghi kích thước khuyên dùng ngay dưới ô.
 
 ### Vai trò
 
@@ -106,7 +135,18 @@ Thư mục `public/build` (CSS/JS đã build) đã có sẵn trong repo, nên m�
    SESSION_DRIVER=database
    CACHE_STORE=database
    QUEUE_CONNECTION=database
+
+   # Gửi email (đơn hàng, quên mật khẩu): tạo hộp thư trong cPanel → Email Accounts
+   MAIL_MAILER=smtp
+   MAIL_HOST=mail.ten-mien-cua-ban.vn
+   MAIL_PORT=465
+   MAIL_SCHEME=smtps
+   MAIL_USERNAME=no-reply@ten-mien-cua-ban.vn
+   MAIL_PASSWORD=mat_khau_hop_thu
+   MAIL_FROM_ADDRESS=no-reply@ten-mien-cua-ban.vn
+   MAIL_FROM_NAME="${APP_NAME}"
    ```
+   Nếu chưa cấu hình email, website vẫn chạy bình thường, chỉ không gửi được email.
 6. **Cài đặt (qua SSH, trong thư mục dự án):**
    ```bash
    composer install --no-dev --optimize-autoloader

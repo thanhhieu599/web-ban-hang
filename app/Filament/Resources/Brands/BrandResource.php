@@ -68,7 +68,8 @@ class BrandResource extends Resource
             TextInput::make('name')->label('Tên thương hiệu')->required()->live(onBlur: true)
                 ->afterStateUpdated(fn (Set $set, ?string $state, string $operation) => $operation === 'create' ? $set('slug', Str::slug((string) $state)) : null),
             TextInput::make('slug')->label('Đường dẫn (slug)')->required()->unique(ignoreRecord: true)->helperText('Phần cuối của địa chỉ trang, viết liền không dấu.'),
-            FileUpload::make('logo')->label('Logo')->image()->disk('public')->directory('brands'),
+            FileUpload::make('logo')->label('Logo')->image()->imageEditor()->disk('public')->directory('brands')->maxSize(1024)
+                ->helperText('Hiện ở bộ lọc thương hiệu. Ảnh ngang khoảng 240×80 px, nền trong suốt.'),
             ColorPicker::make('color')->label('Màu chữ khi chưa có logo'),
             TextInput::make('sort')->label('Thứ tự')->numeric()->default(0),
             Toggle::make('is_active')->label('Hiển thị')->default(true)->inline(false),

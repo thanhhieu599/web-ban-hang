@@ -44,7 +44,7 @@
                 @foreach ($tiles as $tile)
                     <a href="{{ route('category', $tile->slug) }}" class="group flex flex-col items-center gap-2 px-1 py-2 text-center">
                         <span class="relative grid h-[68px] w-[68px] place-items-center rounded-full bg-linear-to-b from-sky-50 to-ink-50 transition group-hover:from-brand-50 group-hover:to-brand-100">
-                            <span class="h-12 w-12 transition group-hover:scale-110"><x-art :type="$tile->icon ?: 'plug'" /></span>
+                            <span class="h-12 w-12 transition group-hover:scale-110"><x-cat-icon :category="$tile" /></span>
                             @if ($tile->sale_badge)<span class="tag-sale absolute -bottom-1 rounded px-1.5 text-[10px] font-extrabold">{{ $tile->sale_badge }}</span>@endif
                         </span>
                         <span class="text-[12.5px] font-medium leading-tight text-ink-800 group-hover:text-brand-700">{{ $tile->name }}</span>

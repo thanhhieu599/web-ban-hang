@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -49,6 +50,12 @@ class Settings extends Page
                 TextInput::make('company_name')->label('Tên công ty (chân trang, hóa đơn)'),
                 TextInput::make('tax_code')->label('Mã số thuế'),
             ]),
+            Section::make('Logo & biểu tượng')->columns(2)->schema([
+                FileUpload::make('logo')->label('Logo')->image()->imageEditor()->disk('public')->directory('brand')->maxSize(1024)
+                    ->helperText('Ảnh ngang, cao khoảng 80 px, nền trong suốt. Để trống thì hiện logo chữ mặc định.'),
+                FileUpload::make('favicon')->label('Biểu tượng trên tab trình duyệt (favicon)')->image()->disk('public')->directory('brand')->maxSize(256)
+                    ->helperText('Ảnh vuông 64×64 px (PNG).'),
+            ]),
             Section::make('Bán hàng')->columns(2)->schema([
                 TextInput::make('shipping_fee')->label('Phí giao hàng mặc định')->numeric()->suffix('đ'),
                 TextInput::make('free_ship_from')->label('Miễn phí giao hàng cho đơn từ')->numeric()->suffix('đ'),
@@ -70,7 +77,7 @@ class Settings extends Page
 
     public function save(): void
     {
-        Setting::put(array_map(fn ($v) => (string) ($v ?? ''), $this->form->getState()));
+        Setting::put(array_map(fn ($v) => (string) (is_array($v) ? (reset($v) ?: '') : ($v ?? '')), $this->form->getState()));
         Notification::make()->title('Đã lưu cấu hình')->success()->send();
     }
 }

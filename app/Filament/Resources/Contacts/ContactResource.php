@@ -88,7 +88,25 @@ class ContactResource extends Resource
             ])
             ->defaultSort('id', 'desc')
             ->filters([SelectFilter::make('status')->label('Trạng thái')->options(Models\Contact::STATUSES)])
-            ->recordActions([EditAction::make(), DeleteAction::make()])
+            ->recordActions([
+                Action::make('reply')->label('Trả lời qua email')->icon('heroicon-o-paper-airplane')->color('primary')
+                    ->visible(fn ($record) => filled($record->email))
+                    ->schema([Textarea::make('reply')->label('Nội dung trả lời')->required()->rows(6)
+                        ->default(fn ($record) => "Chào {$record->name},\n\nCảm ơn bạn đã liên hệ.\n\n")])
+                    ->action(function ($record, array $data) {
+                        try {
+                            \Mail::raw($data['reply']."\n\n--\n".setting('site_name').' · '.setting('hotline_care'), fn ($m) => $m->to($record->email)->subject('Re: '.($record->subject ?: 'Liên hệ của bạn')));
+                            $record->update(['status' => 'replied', 'reply' => $data['reply']]);
+                            Notification::make()->title('Đã gửi email trả lời')->success()->send();
+                        } catch (\Throwable $e) {
+                            report($e);
+                            Notification::make()->title('Không gửi được email. Kiểm tra cấu hình MAIL_ trong .env.')->danger()->send();
+                        }
+                    }),
+                Action::make('read')->label('Đánh dấu đã xem')->icon('heroicon-o-eye')->color('gray')
+                    ->visible(fn ($record) => $record->status === 'new')->action(fn ($record) => $record->update(['status' => 'read'])),
+                EditAction::make(), DeleteAction::make(),
+            ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
     }
 

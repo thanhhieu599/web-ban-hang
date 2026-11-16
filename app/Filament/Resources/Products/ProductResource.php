@@ -11,6 +11,12 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -72,7 +78,7 @@ class ProductResource extends Resource
                     TextInput::make('slug')->label('Đường dẫn (slug)')->required()->unique(ignoreRecord: true)->helperText('Phần cuối của địa chỉ trang, viết liền không dấu.'),
                     TextInput::make('sku')->label('Mã SKU')->required()->unique(ignoreRecord: true)->default(fn () => 'SP'.strtoupper(Str::random(6))),
                     Select::make('category_id')->label('Danh mục')->required()->searchable()
-                        ->options(fn () => Models\Category::whereNotNull('parent_id')->with('parent')->get()->groupBy('parent.name')->map(fn ($g) => $g->pluck('name', 'id'))->all()),
+                        ->options(fn () => Models\Category::whereNotNull('parent_id')->with('parent')->get()->groupBy('parent.name')->map(fn ($g) => $g->pluck('name', 'id')->all())->all()),
                     Select::make('brand_id')->label('Thương hiệu')->relationship('brand', 'name')->searchable()->preload(),
                     Textarea::make('short_description')->label('Mô tả ngắn')->rows(2)->maxLength(500)->columnSpanFull(),
                     RichEditor::make('description')->label('Mô tả chi tiết')->columnSpanFull(),
@@ -86,7 +92,8 @@ class ProductResource extends Resource
                     TextInput::make('warranty')->label('Bảo hành')->placeholder('24 tháng chính hãng'),
                 ]),
                 Tab::make('Hình ảnh')->schema([
-                    FileUpload::make('images')->label('Ảnh sản phẩm')->image()->multiple()->reorderable()->disk('public')->directory('products')->maxFiles(8)->imageEditor(),
+                    FileUpload::make('images')->label('Ảnh sản phẩm')->image()->multiple()->reorderable()->disk('public')->directory('products')->maxFiles(8)->imageEditor()->maxSize(3072)
+                        ->helperText('Ảnh đầu tiên là ảnh đại diện. Ảnh vuông 800×800 px, nền trắng. Kéo để đổi thứ tự.'),
                     Select::make('art')->label('Hình minh họa (dùng khi chưa có ảnh)')->options(art_options())->searchable(),
                 ]),
                 Tab::make('Phân loại')->columns(2)->schema([
@@ -130,6 +137,7 @@ class ProductResource extends Resource
                 SelectFilter::make('category_id')->label('Danh mục')->relationship('category', 'name')->searchable()->preload(),
                 SelectFilter::make('brand_id')->label('Thương hiệu')->relationship('brand', 'name'),
                 SelectFilter::make('status')->label('Trạng thái')->options(Models\Product::STATUSES),
+                TrashedFilter::make()->label('Thùng rác'),
                 Filter::make('low_stock')->label('Sắp hết hàng')->query(fn (Builder $q) => $q->whereColumn('stock', '<=', 'low_stock_threshold')),
             ])
             ->recordActions([
@@ -147,13 +155,22 @@ class ProductResource extends Resource
                         Notification::make()->title('Đã cập nhật tồn kho: '.$record->stock)->success()->send();
                     }),
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()->label('Chuyển vào thùng rác'),
+                RestoreAction::make()->label('Khôi phục'),
+                ForceDeleteAction::make()->label('Xóa vĩnh viễn'),
             ])
             ->toolbarActions([BulkActionGroup::make([
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
                 BulkAction::make('publish')->label('Duyệt & đăng bán')->icon('heroicon-o-check-badge')
                     ->action(fn ($records) => $records->each->update(['status' => 'published']))->deselectRecordsAfterCompletion(),
                 DeleteBulkAction::make(),
             ])]);
+    }
+
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        return parent::getRecordRouteBindingEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getPages(): array

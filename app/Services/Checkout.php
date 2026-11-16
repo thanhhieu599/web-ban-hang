@@ -22,6 +22,10 @@ class Checkout
                 if ($fresh->stock < $line->qty) {
                     throw ValidationException::withMessages(['cart' => "Sản phẩm \"{$fresh->name}\" chỉ còn {$fresh->stock} chiếc. Vui lòng giảm số lượng."]);
                 }
+                $flash = $line->product->flashItem();
+                if ($flash && $line->qty > $flash->quantity - $flash->sold) {
+                    throw ValidationException::withMessages(['cart' => "\"{$fresh->name}\" chỉ còn ".($flash->quantity - $flash->sold).' suất giá flash sale. Vui lòng giảm số lượng.']);
+                }
             }
 
             $coupon = Cart::coupon();

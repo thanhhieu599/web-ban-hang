@@ -66,15 +66,21 @@ class AdResource extends Resource
     {
         return $schema->components([
             TextInput::make('name')->label('Tên quản lý nội bộ')->required(),
-            Select::make('position')->label('Vị trí hiển thị')->options(Models\Ad::POSITIONS)->required(),
+            Select::make('position')->label('Vị trí hiển thị')->options(Models\Ad::POSITIONS)->required()->live(),
             TextInput::make('eyebrow')->label('Dòng chữ nhỏ phía trên')->placeholder('Black Friday · 27.11.2026'),
             TextInput::make('title')->label('Tiêu đề lớn')->placeholder('Black Friday'),
             TextInput::make('subtitle')->label('Tiêu đề phụ')->placeholder('Siêu sale cuối năm'),
             TextInput::make('badge')->label('Nhãn giá / ưu đãi')->placeholder('Giá chỉ từ 5.199.000đ'),
             Select::make('theme')->label('Màu nền')->options(Models\Ad::THEMES)->default('red')->required(),
             Select::make('art')->label('Hình minh họa')->options(art_options())->searchable(),
-            FileUpload::make('image')->label('Ảnh banner thiết kế sẵn')->image()->disk('public')->directory('ads')
-                ->helperText('Nếu tải ảnh lên, ảnh sẽ thay toàn bộ phần chữ và hình minh họa.')->columnSpanFull(),
+            Section::make('Ảnh banner')->columnSpanFull()->columns(2)
+                ->description('Tải ảnh thiết kế sẵn để thay phần chữ và hình minh họa. Để trống thì banner được dựng tự động từ các ô chữ ở trên.')
+                ->schema([
+                    FileUpload::make('image')->label('Ảnh cho máy tính')->image()->imageEditor()->disk('public')->directory('ads')->maxSize(3072)
+                        ->helperText(fn (Get $get) => 'Kích thước khuyên dùng: '.(Models\Ad::SIZES[$get('position')] ?? 'chọn vị trí để xem').'. JPG hoặc WebP, tối đa 3 MB.'),
+                    FileUpload::make('image_mobile')->label('Ảnh cho điện thoại (không bắt buộc)')->image()->imageEditor()->disk('public')->directory('ads')->maxSize(2048)
+                        ->helperText('Dùng khi ảnh máy tính quá ngang, chữ bị nhỏ trên điện thoại. Khuyên dùng 800×600 px.'),
+                ]),
             TextInput::make('link')->label('Liên kết khi bấm')->placeholder('/danh-muc/dieu-hoa')->columnSpanFull(),
             TextInput::make('sort')->label('Thứ tự')->numeric()->default(0),
             Toggle::make('is_active')->label('Đang bật')->default(true)->inline(false),
@@ -87,6 +93,7 @@ class AdResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('image')->label('Ảnh')->disk('public')->height(40)->placeholder('Tự dựng'),
                 TextColumn::make('name')->label('Tên')->searchable()->wrap(),
                 TextColumn::make('position')->label('Vị trí')->badge()->color('gray')->formatStateUsing(fn ($state) => Models\Ad::POSITIONS[$state] ?? $state),
                 TextColumn::make('title')->label('Tiêu đề')->limit(40),

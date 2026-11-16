@@ -18,6 +18,6 @@ class ListProducts extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()];
+        return [Action::make('export')->label('Xuất Excel (CSV)')->icon('heroicon-o-arrow-down-tray')->color('gray')->url(route('admin.export', 'san-pham'))->openUrlInNewTab(), CreateAction::make()];
     }
 }

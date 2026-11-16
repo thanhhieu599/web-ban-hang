@@ -71,8 +71,11 @@ class CategoryResource extends Resource
             Select::make('parent_id')->label('Danh mục cha')->placeholder('Không có (đây là danh mục cấp 1)')
                 ->options(fn (?Models\Category $record) => Models\Category::whereNull('parent_id')->when($record, fn ($q) => $q->whereKeyNot($record->id))->pluck('name', 'id'))
                 ->helperText('Menu hiển thị 2 cấp: cấp 1 là nhóm, cấp 2 chứa sản phẩm.'),
-            Select::make('icon')->label('Hình minh họa')->options(art_options())->searchable(),
-            FileUpload::make('image')->label('Ảnh danh mục (tùy chọn)')->image()->disk('public')->directory('categories'),
+            Select::make('icon')->label('Hình minh họa có sẵn')->options(art_options())->searchable()->helperText('Dùng khi chưa tải ảnh icon.'),
+            FileUpload::make('image')->label('Ảnh icon danh mục')->image()->imageEditor()->disk('public')->directory('categories')->maxSize(1024)
+                ->helperText('Hiện ở menu danh mục, ô Danh mục nổi bật và thanh danh mục. Ảnh vuông 200×200 px, nền trong suốt (PNG/WebP).'),
+            FileUpload::make('banner')->label('Ảnh banner đầu trang danh mục')->image()->imageEditor()->disk('public')->directory('categories')->maxSize(3072)
+                ->helperText('Kích thước 1200×300 px. Để trống thì dùng banner chung ở mục Quảng cáo (vị trí "Trang danh mục").')->columnSpanFull(),
             TextInput::make('sale_badge')->label('Nhãn giảm giá')->placeholder('-50%')->maxLength(20),
             TextInput::make('sort')->label('Thứ tự')->numeric()->default(0),
             Toggle::make('is_featured')->label('Hiện ở "Danh mục nổi bật" trang chủ')->inline(false),
@@ -89,6 +92,7 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('image')->label('Icon')->disk('public')->square()->height(36)->placeholder('Minh họa'),
                 TextColumn::make('name')->label('Tên')->searchable()->sortable(),
                 TextColumn::make('parent.name')->label('Danh mục cha')->placeholder('Cấp 1')->badge()->color('gray'),
                 TextColumn::make('products_count')->label('Số sản phẩm')->counts('products')->sortable(),

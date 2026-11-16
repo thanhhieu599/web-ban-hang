@@ -94,6 +94,9 @@ class Order extends Model
     /** Đổi trạng thái đơn và xử lý tồn kho khi hủy/trả. */
     public function changeStatus(string $status): void
     {
+        if ($status === $this->status) {
+            return;
+        }
         $restock = in_array($status, ['cancelled', 'returned']) && ! in_array($this->status, ['cancelled', 'returned']);
         $this->update([
             'status' => $status,
@@ -106,5 +109,6 @@ class Order extends Model
                 $item->product?->decrement('sold_count', min($item->quantity, $item->product->sold_count));
             }
         }
+        \App\Mail\OrderMail::dispatch($this, $status);
     }
 }

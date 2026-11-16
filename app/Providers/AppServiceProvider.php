@@ -24,6 +24,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('staff', fn (User $user) => $user->is_active && $user->isStaff());
         Paginator::defaultView('partials.pagination');
 
+        // Email đặt lại mật khẩu bằng tiếng Việt
+        \Illuminate\Auth\Notifications\ResetPassword::toMailUsing(fn ($user, string $token) => (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject('Đặt lại mật khẩu · '.setting('site_name'))
+            ->greeting('Chào '.$user->name.',')
+            ->line('Bạn (hoặc ai đó) vừa yêu cầu đặt lại mật khẩu cho tài khoản này.')
+            ->action('Đặt lại mật khẩu', route('password.reset', ['token' => $token, 'email' => $user->email]))
+            ->line('Liên kết có hiệu lực trong 60 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.')
+            ->salutation(setting('site_name')));
+
         // Dữ liệu dùng chung cho mọi trang của cửa hàng: menu 2 cấp, cấu hình, giỏ hàng, link chân trang
         View::composer('layouts.app', function ($view) {
             $view->with([

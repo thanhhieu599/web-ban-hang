@@ -7,7 +7,10 @@
 @endphp
 <{{ $tag }} @if ($href) href="{{ $href }}" @endif {{ $attributes->merge(['class' => 'relative block overflow-hidden rounded-2xl '.($ad->image ? '' : 'banner-'.$ad->theme.' text-white')]) }}>
     @if ($ad->image)
-        <img src="{{ asset('storage/'.$ad->image) }}" alt="{{ $ad->title ?: $ad->name }}" class="h-full w-full object-cover">
+        <picture>
+            @if ($ad->image_mobile)<source media="(max-width: 640px)" srcset="{{ asset('storage/'.$ad->image_mobile) }}">@endif
+            <img src="{{ asset('storage/'.$ad->image) }}" alt="{{ $ad->title ?: $ad->name }}" @class(['w-full object-cover', 'aspect-[4/3] sm:aspect-[8/3] sm:min-h-[300px]' => $variant === 'hero', 'aspect-[2/1] sm:aspect-[4/1]' => $variant === 'category', 'h-full' => ! in_array($variant, ['hero', 'category'])]) @if ($variant !== 'hero') loading="lazy" @endif>
+        </picture>
     @elseif ($variant === 'hero')
         <div class="confetti absolute inset-0"></div>
         <div class="relative grid min-h-[230px] grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center gap-2 p-5 sm:min-h-[300px] sm:p-8">

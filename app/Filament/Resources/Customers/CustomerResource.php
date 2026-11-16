@@ -96,7 +96,15 @@ class CustomerResource extends Resource
                 TextColumn::make('created_at')->label('Ngày đăng ký')->dateTime('d/m/Y')->sortable(),
             ])
             ->defaultSort('id', 'desc')
-            ->recordActions([EditAction::make(), DeleteAction::make()])
+            ->filters([
+                Filter::make('loyal')->label('Khách thân thiết (từ 2 đơn)')->query(fn (Builder $q) => $q->has('orders', '>=', 2)),
+                Filter::make('no_order')->label('Chưa mua lần nào')->query(fn (Builder $q) => $q->doesntHave('orders')),
+            ])
+            ->recordActions([
+                Action::make('orders')->label('Đơn hàng')->icon('heroicon-o-shopping-bag')->color('gray')
+                    ->url(fn ($record) => \App\Filament\Resources\Orders\OrderResource::getUrl('index', ['filters' => ['user_id' => ['value' => $record->id]]])),
+                EditAction::make(), DeleteAction::make(),
+            ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
     }
 

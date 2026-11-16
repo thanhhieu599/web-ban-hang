@@ -20,4 +20,14 @@ class CreateProduct extends CreateRecord
     {
         return $this->getResource()::getUrl('index');
     }
+
+    protected function afterCreate(): void
+    {
+        if ($this->record->stock) {
+            $this->record->inventoryMovements()->create([
+                'user_id' => auth()->id(), 'type' => 'in', 'quantity' => $this->record->stock,
+                'stock_after' => $this->record->stock, 'note' => 'Tồn kho ban đầu khi tạo sản phẩm',
+            ]);
+        }
+    }
 }

@@ -28,7 +28,11 @@ class Cart
         $key = $product->id.'-'.substr(md5(json_encode($options)), 0, 8);
         $cart = self::raw();
         $current = $cart[$key]['qty'] ?? 0;
-        $cart[$key] = ['product_id' => $product->id, 'qty' => min($current + max(1, $quantity), max(1, $product->stock)), 'options' => $options];
+        $limit = max(1, $product->stock);
+        if ($flash = $product->flashItem()) {
+            $limit = min($limit, max(1, $flash->quantity - $flash->sold)); // giá flash sale chỉ áp dụng trong số suất còn lại
+        }
+        $cart[$key] = ['product_id' => $product->id, 'qty' => min($current + max(1, $quantity), $limit), 'options' => $options];
         self::store($cart);
     }
 
@@ -37,6 +41,11 @@ class Cart
         $cart = self::raw();
         if (! isset($cart[$key])) {
             return;
+        }
+        $line = self::lines()->firstWhere('key', $key);
+        if ($line && $quantity > $line->qty) {
+            $flash = $line->product->flashItem();
+            $quantity = min($quantity, $line->product->stock, $flash ? $flash->quantity - $flash->sold : PHP_INT_MAX);
         }
         if ($quantity < 1) {
             unset($cart[$key]);
@@ -68,6 +77,9 @@ class Cart
             }
             $unit = $product->final_price + (int) array_sum(array_column($line['options'], 'price'));
             $qty = min($line['qty'], max(0, $product->stock));
+            if ($flash = $product->flashItem()) {
+                $qty = min($qty, max(0, $flash->quantity - $flash->sold));
+            }
 
             return (object) ['key' => $key, 'product' => $product, 'qty' => $qty, 'options' => $line['options'], 'unit' => $unit, 'total' => $unit * $qty];
         })->filter(fn ($l) => $l && $l->qty > 0)->values();

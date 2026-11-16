@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderMail;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\Product;
@@ -89,6 +90,8 @@ class CartController extends Controller
 
         $order = Checkout::place($data);
         session(['last_order' => $order->code]);
+        OrderMail::dispatch($order, 'placed');
+        OrderMail::dispatch($order, 'new');
 
         return redirect()->route('order.success', $order->code);
     }
