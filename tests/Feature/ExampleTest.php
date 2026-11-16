@@ -22,6 +22,14 @@ class ExampleTest extends TestCase
         $this->seed(DatabaseSeeder::class);
     }
 
+    /** Sản phẩm còn hàng và không nằm trong flash sale (để số lượng mua không bị giới hạn theo suất). */
+    protected function regularProduct(): Product
+    {
+        $flashIds = \App\Models\FlashSale::current()?->items->pluck('product_id') ?? collect();
+
+        return Product::where('stock', '>', 5)->whereNotIn('id', $flashIds)->firstOrFail();
+    }
+
     public function test_storefront_pages_load(): void
     {
         foreach (['/', '/danh-muc/dieu-hoa', '/danh-muc/dien-lanh', '/tim-kiem?q=tivi', '/tin-tuc', '/gio-hang', '/hoi-dap', '/lien-he', '/dang-nhap', '/sitemap.xml'] as $url) {
@@ -32,7 +40,7 @@ class ExampleTest extends TestCase
 
     public function test_guest_can_checkout_and_stock_is_reduced(): void
     {
-        $product = Product::where('stock', '>', 2)->first();
+        $product = $this->regularProduct();
         $stock = $product->stock;
 
         $this->postJson('/gio-hang/them', ['product_id' => $product->id, 'quantity' => 2])->assertOk()->assertJson(['count' => 2]);
@@ -78,7 +86,7 @@ class ExampleTest extends TestCase
     public function test_order_emails_are_sent(): void
     {
         Mail::fake();
-        $product = Product::where('stock', '>', 2)->first();
+        $product = $this->regularProduct();
         $this->postJson('/gio-hang/them', ['product_id' => $product->id]);
         $this->post('/thanh-toan', ['customer_name' => 'A', 'phone' => '0912345678', 'email' => 'a@example.com', 'province' => 'HN', 'address' => 'x', 'payment_method' => 'bank']);
         Mail::assertSent(\App\Mail\OrderMail::class, fn ($m) => $m->kind === 'placed' && $m->hasTo('a@example.com'));
@@ -117,7 +125,8 @@ class ExampleTest extends TestCase
     public function test_customer_can_request_return_once(): void
     {
         $user = User::where('email', 'khach@example.com')->first();
-        $order = Order::where('user_id', $user->id)->where('status', 'completed')->whereDoesntHave('returns')->firstOrFail();
+        $order = Order::where('user_id', '!=', $user->id)->where('status', 'completed')->whereDoesntHave('returns')->firstOrFail();
+        $order->update(['user_id' => $user->id]);
         $this->actingAs($user)->get('/tai-khoan/don-hang/'.$order->code)->assertOk()->assertSee('Yêu cầu trả hàng');
         $this->post('/tai-khoan/don-hang/'.$order->code.'/tra-hang', ['reason' => 'Sản phẩm bị trầy khi nhận hàng.'])->assertSessionHasNoErrors();
         $this->assertSame(1, $order->returns()->count());
